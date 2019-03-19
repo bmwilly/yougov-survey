@@ -1,0 +1,33 @@
+---
+title: "YouGov"
+output:
+  html_notebook:
+    toc: true
+    toc_float: true
+    toc_depth: 2
+    theme: spacelab
+    code_folding: hide
+---
+
+Even though the Democratic primary field has started to coalesce around formerly left policies such as Medicare for All, most candidates are still unwilling to hold strong  positions on a variety of historically taboo labor, gun, and Israel-US topics. 
+
+YouGov has conducted a survey of nationally representative 2018 voters about such issues. (Un)surprisingly, the American public does not view these topics as controversial as Twitter pundits would have you believe. 
+
+A full 64% of respondents support "red flag" laws, which allow courts to temporarily remove firearms from the homes of individuals who are deemed to pose a violent risk to themselves or others. 
+
+Similarly, a plurality of respondents support a four-day work week (38.5%) and oppose laws that forbid boycotts of Israel (33.7%). 
+
+On their face, these policies are controversial nonstarters; in reality, they enjoy broad-based support.
+
+```{r, echo=FALSE, include=FALSE}
+source("explore.R")
+```
+
+```{r}
+g_bar
+```
+
+```{r}
+g_likert
+```
+

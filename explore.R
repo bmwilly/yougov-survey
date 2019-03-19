@@ -80,11 +80,11 @@ titles <- c(
 )
 
 df <- dat %>%
-  select(FOURDAY, REDFLAG, BDS) %>%
+  select(FOURDAY, REDFLAG, BDS, weight) %>%
   gather(question, answer, FOURDAY, REDFLAG, BDS) %>%
   drop_na(answer) %>%
   group_by(question, answer) %>%
-  summarize(n = n()) %>%
+  summarize(n = sum(weight)) %>%
   mutate(p = n / sum(n)) %>%
   mutate(answer = fct_rev(factor(plyr::mapvalues(answer, 1:6, survey_opts), levels = survey_opts))) %>%
   mutate(color = case_when(
@@ -94,7 +94,7 @@ df <- dat %>%
   ungroup() %>%
   mutate(question = fct_rev(factor(plyr::mapvalues(question, names(titles), str_wrap(titles, 80)))))
 
-df %>%
+g_bar <- df %>%
   ggplot(aes(x = answer, y = p)) + 
   geom_col(aes(fill = color)) +
   geom_text(aes(label = scales::percent(p)), nudge_y = 0.015, family = 'Montserrat-Regular', size = 2.8) +
@@ -105,32 +105,44 @@ df %>%
   labs(x = "", y = "") + 
   theme_dfp() + 
   guides(fill = "none")
+g_bar
 
-dat %>%
-  select(FOURDAY, REDFLAG, BDS) %>%
-  gather(question, answer, FOURDAY, REDFLAG, BDS) %>%
-  drop_na(answer) 
-
-head(df)
-
-dat %>%
-  select(FOURDAY, REDFLAG, BDS) %>%
+dft <- dat %>%
+  select(FOURDAY, REDFLAG, BDS, weight) %>%
   gather(question, answer, FOURDAY, REDFLAG, BDS) %>%
   drop_na(answer) %>%
   filter(answer != 6) %>%
   group_by(question, answer) %>%
-  summarize(n = n()) %>%
+  summarize(n = sum(weight)) %>%
   mutate(p = n / sum(n)) %>%
   mutate(answer = fct_rev(factor(plyr::mapvalues(answer, 1:6, survey_opts), levels = survey_opts))) %>%
   ungroup() %>%
-  mutate(question = fct_rev(factor(plyr::mapvalues(question, names(titles), str_wrap(titles, 80))))) %>%
-  ggplot(aes(question, p)) + 
-  geom_col(aes(fill = answer)) + 
+  mutate(question = factor(plyr::mapvalues(question, names(titles), str_wrap(titles, 80))))
+
+df_hi <- dft %>%
+  filter(answer %in% c("Strongly support", "Somewhat support", "Neither support nor oppose")) %>%
+  mutate(p = case_when(
+    answer == "Neither support nor oppose" ~ p / 2,
+    TRUE ~ p
+  )) %>%
+  mutate(answer = fct_rev(answer))
+
+df_lo <- dft %>%
+  filter(answer %in% c("Strongly oppose", "Somewhat oppose", "Neither support nor oppose")) %>%
+  mutate(p = case_when(
+    answer == "Neither support nor oppose" ~ p / 2,
+    TRUE ~ p
+  )) %>%
+  mutate(p = -p)
+
+g_likert <- ggplot() + 
+  geom_col(data = df_hi, aes(question, p, fill = answer)) + 
+  geom_col(data = df_lo, aes(question, p, fill = answer)) + 
+  geom_hline(yintercept = 0, color = "white") +
   coord_flip() + 
   scale_y_continuous(labels = function(x) scales::percent(x, accuracy = 1)) +
   scale_fill_manual(values = answer_colors) +
   labs(x = "", y = "", fill = "") + 
   theme_dfp()
-
-
+g_likert
 
