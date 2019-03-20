@@ -117,7 +117,7 @@ dft <- dat %>%
   mutate(p = n / sum(n)) %>%
   mutate(answer = fct_rev(factor(plyr::mapvalues(answer, 1:6, survey_opts), levels = survey_opts))) %>%
   ungroup() %>%
-  mutate(question = factor(plyr::mapvalues(question, names(titles), str_wrap(titles, 80))))
+  mutate(question = factor(plyr::mapvalues(question, names(titles), str_wrap(titles, 50))))
 
 df_hi <- dft %>%
   filter(answer %in% c("Strongly support", "Somewhat support", "Neither support nor oppose")) %>%
@@ -140,9 +140,14 @@ g_likert <- ggplot() +
   geom_col(data = df_lo, aes(question, p, fill = answer)) + 
   geom_hline(yintercept = 0, color = "white") +
   coord_flip() + 
-  scale_y_continuous(labels = function(x) scales::percent(x, accuracy = 1)) +
+  scale_y_continuous(
+    labels = function(x) scales::percent(x, accuracy = 1), 
+    breaks = c(-0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75)
+    # limits = c(-0.8, 0.8)
+  ) +
   scale_fill_manual(values = answer_colors) +
   labs(x = "", y = "", fill = "") + 
   theme_dfp()
 g_likert
+
 
