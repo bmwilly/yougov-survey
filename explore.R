@@ -107,6 +107,7 @@ g_bar <- df %>%
   guides(fill = "none")
 g_bar
 
+
 dft <- dat %>%
   select(FOURDAY, REDFLAG, BDS, weight) %>%
   gather(question, answer, FOURDAY, REDFLAG, BDS) %>%
