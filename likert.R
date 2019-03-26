@@ -1,3 +1,26 @@
+title_fourday <- paste(
+  "Would you support or oppose a policy limiting the work week to four days?",
+  "Employers in the US are not currently required to give employees any days off."
+)
+
+title_redflag <- paste(
+  "Several states have recently enacted Extreme Risk Protection Order laws,",
+  "also known as “red flag” laws, which allow courts to temporarily remove firearms",
+  "from the homes of individuals who are deemed to pose a violent risk to themselves or others.",
+  "Do you support or oppose these “red flag” laws?"  
+)
+
+title_bds <- paste(
+  "Do you support or oppose laws forbidding Federal, state, or local employees",
+  "and contractors from promoting boycotts of Israel?"
+)
+
+titles <- c(
+  "REDFLAG" = title_redflag,
+  "FOURDAY" = title_fourday,
+  "BDS" = title_bds
+)
+
 answer_colors_support <- c(
   colors['dark_blue'],
   colors['blue'],
@@ -28,11 +51,16 @@ df <- dat %>%
   mutate(p = n / sum(n)) %>%
   mutate(answer = fct_rev(factor(plyr::mapvalues(answer, 1:6, survey_opts), levels = survey_opts))) %>%
   ungroup() %>%
-  mutate(question_text = factor(plyr::mapvalues(question, names(titles), str_wrap(titles, 60))))
+  mutate(
+    question = fct_rev(factor(
+      plyr::mapvalues(question, names(titles), titles),
+      levels = titles
+    ))
+  )
 
 # BDS
 dft <- df %>%
-  filter(question == 'BDS') %>%
+  filter(question == titles[['BDS']]) %>%
   mutate(answer = fct_rev(answer))
 
 df_hi <- dft %>%
@@ -52,19 +80,24 @@ df_lo <- dft %>%
   mutate(p = -p)
 
 g_likert_bds <- ggplot() + 
-  geom_col(data = df_hi, aes(question_text, p, fill = answer)) + 
-  geom_col(data = df_lo, aes(question_text, p, fill = answer)) + 
+  geom_col(data = df_hi, aes(question, p, fill = answer)) + 
+  geom_col(data = df_lo, aes(question, p, fill = answer)) + 
   geom_hline(yintercept = 0, color = "white") +
   coord_flip() + 
-  scale_y_continuous(labels = function(x) scales::percent(x, accuracy = 1)) +
+  scale_x_discrete(labels = function(x) str_wrap(x, 50)) + 
+  scale_y_continuous(
+    labels = function(x) scales::percent(x, accuracy = 1),
+    limits = c(-1, 1)
+  ) +
   scale_fill_manual(values = answer_colors_oppose) +
   labs(x = "", y = "", fill = "") + 
-  theme_dfp()
+  theme_dfp() + 
+  guides(fill = FALSE)
 g_likert_bds
 
-# Other
+# Red flag
 dft <- df %>%
-  filter(question != 'BDS')
+  filter(question == titles[['REDFLAG']])
 
 df_hi <- dft %>%
   filter(answer %in% c("Strongly support", "Somewhat support", "Neither support nor oppose")) %>%
@@ -82,14 +115,63 @@ df_lo <- dft %>%
   )) %>%
   mutate(p = -p)
 
-g_likert_other <- ggplot() + 
-  geom_col(data = df_hi, aes(question_text, p, fill = answer)) + 
-  geom_col(data = df_lo, aes(question_text, p, fill = answer)) + 
+g_likert_redflag <- ggplot() + 
+  geom_col(data = df_hi, aes(question, p, fill = answer)) + 
+  geom_col(data = df_lo, aes(question, p, fill = answer)) + 
   geom_hline(yintercept = 0, color = "white") +
   coord_flip() + 
-  scale_y_continuous(labels = function(x) scales::percent(x, accuracy = 1)) +
+  scale_x_discrete(labels = function(x) str_wrap(x, 50)) + 
+  scale_y_continuous(
+    labels = function(x) scales::percent(x, accuracy = 1),
+    limits = c(-1, 1)
+  ) +
   scale_fill_manual(values = answer_colors_support) +
   labs(x = "", y = "", fill = "") + 
-  theme_dfp()
-g_likert_other
+  theme_dfp() + 
+  guides(fill = FALSE)
+g_likert_redflag
+
+
+# 4-day
+dft <- df %>%
+  filter(question == titles[['FOURDAY']])
+
+df_hi <- dft %>%
+  filter(answer %in% c("Strongly support", "Somewhat support", "Neither support nor oppose")) %>%
+  mutate(p = case_when(
+    answer == "Neither support nor oppose" ~ p / 2,
+    TRUE ~ p
+  )) %>%
+  mutate(answer = fct_rev(answer))
+
+df_lo <- dft %>%
+  filter(answer %in% c("Strongly oppose", "Somewhat oppose", "Neither support nor oppose")) %>%
+  mutate(p = case_when(
+    answer == "Neither support nor oppose" ~ p / 2,
+    TRUE ~ p
+  )) %>%
+  mutate(p = -p)
+
+g_likert_fourday <- ggplot() + 
+  geom_col(data = df_hi, aes(question, p, fill = answer)) + 
+  geom_col(data = df_lo, aes(question, p, fill = answer)) + 
+  geom_hline(yintercept = 0, color = "white") +
+  coord_flip() + 
+  scale_x_discrete(labels = function(x) str_wrap(x, 50)) + 
+  scale_y_continuous(
+    labels = function(x) scales::percent(x, accuracy = 1),
+    limits = c(-1, 1)
+  ) +
+  scale_fill_manual(values = answer_colors_support) +
+  labs(x = "", y = "", fill = "") + 
+  theme_dfp() +
+  guides(fill = FALSE)
+g_likert_fourday
+
+cowplot::plot_grid(
+  g_likert_redflag, g_likert_fourday, g_likert_bds, 
+  ncol = 1, align = 'hv'
+)
+
+
 
