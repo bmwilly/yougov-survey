@@ -229,11 +229,6 @@ g_likert_fourday <- ggplot() +
   guides(fill = FALSE)
 g_likert_fourday
 
-cowplot::plot_grid(
-  g_likert_redflag, g_likert_fourday, g_likert_bds,
-  ncol = 1, align = 'hv'
-)
-
 g_likert_redflag + g_likert_fourday + g_likert_bds + 
   plot_layout(ncol = 1)
 

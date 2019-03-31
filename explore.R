@@ -179,8 +179,6 @@ g_likert <- ggplot() +
     y = "", 
     fill = ""
   ) +
-  theme_dfp() +
-  guides(fill = "none")
-g_likert
+  theme_dfp()
 
 
