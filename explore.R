@@ -4,6 +4,7 @@ source("dfp_ggplot_theme.R")
 
 dat <- read_csv("dfp_wave3_201901_final.csv")
 
+
 survey_opts <- c(
   "Strongly support",
   "Somewhat support",
@@ -65,7 +66,7 @@ title_redflag <- paste(
   "Several states have recently enacted Extreme Risk Protection Order laws,",
   "also known as “red flag” laws, which allow courts to temporarily remove firearms",
   "from the homes of individuals who are deemed to pose a violent risk to themselves or others.",
-  "Do you support or oppose these “red flag” laws?"  
+  "Do you support or oppose these “red flag” laws?"
 )
 
 title_bds <- paste(
@@ -95,15 +96,15 @@ df <- dat %>%
   mutate(question = fct_rev(factor(plyr::mapvalues(question, names(titles), str_wrap(titles, 80)))))
 
 g_bar <- df %>%
-  ggplot(aes(x = answer, y = p)) + 
+  ggplot(aes(x = answer, y = p)) +
   geom_col(aes(fill = color)) +
   geom_text(aes(label = scales::percent(p)), nudge_y = 0.015, family = 'Montserrat-Regular', size = 2.8) +
-  coord_flip() + 
+  coord_flip() +
   scale_y_continuous(labels = function(x) scales::percent(x, accuracy = 1)) +
-  scale_fill_manual(values = colors) + 
-  facet_wrap(~question, ncol = 1) + 
-  labs(x = "", y = "") + 
-  theme_dfp() + 
+  scale_fill_manual(values = colors) +
+  facet_wrap(~question, ncol = 1) +
+  labs(x = "", y = "") +
+  theme_dfp() +
   guides(fill = "none")
 g_bar
 
@@ -141,19 +142,45 @@ df_lo <- dft %>%
   )) %>%
   mutate(p = -p)
 
-g_likert <- ggplot() + 
-  geom_col(data = df_hi, aes(question, p, fill = answer)) + 
-  geom_col(data = df_lo, aes(question, p, fill = answer)) + 
+nudge_y <- 0.2
+
+g_likert <- ggplot() +
+  geom_col(data = df_hi, aes(question, p, fill = answer)) +
+  geom_text(
+    data = df_hi %>% 
+      filter(answer != "Neither support nor oppose") %>%
+      group_by(question) %>% 
+      summarize(p = sum(p)),
+    aes(question, p, label = scales::percent(p, accuracy = 1)),
+    # color = "white"
+    nudge_y = nudge_y
+  ) +
+  geom_col(data = df_lo, aes(question, p, fill = answer)) +
+  geom_text(
+    data = df_lo %>% 
+      filter(answer != "Neither support nor oppose") %>%
+      group_by(question) %>% 
+      summarize(p = sum(p)),
+    aes(question, p, label = scales::percent(-p, accuracy = 1)),
+    # color = "white"
+    nudge_y = -nudge_y
+  ) +
   geom_hline(yintercept = 0, color = "white") +
-  coord_flip() + 
-  scale_x_discrete(labels = function(x) str_wrap(x, 50)) + 
+  coord_flip() +
+  scale_x_discrete(labels = function(x) str_wrap(x, 50)) +
   scale_y_continuous(
     labels = function(x) scales::percent(x, accuracy = 1),
     limits = c(-1, 1)
   ) +
   scale_fill_manual(values = answer_colors) +
-  labs(x = "", y = "", fill = "") + 
-  theme_dfp()
+  labs(
+    title = , 
+    x = "", 
+    y = "", 
+    fill = ""
+  ) +
+  theme_dfp() +
+  guides(fill = "none")
 g_likert
 
 

@@ -1,3 +1,5 @@
+library(patchwork)
+
 answer_colors_support <- c(
   colors['dark_blue'],
   colors['blue'],
@@ -46,11 +48,12 @@ df <- dat %>%
     age = 2019 - birthyr,
     generation = cut(age, breaks = c(0, 37, 53, 72, Inf), labels = c("Millennial", "Gen X", "Boomers", "Silent"))
   ) %>%
+  mutate(race = fct_other(race, keep = c("White", "Black or African-American", "Hispanic or Latino"))) %>%
   select(race, generation, FOURDAY, REDFLAG, BDS, weight) %>%
   gather(question, answer, FOURDAY, REDFLAG, BDS) %>%
   drop_na(answer) %>%
   filter(answer != 6) %>%
-  group_by(race, question, answer) %>%
+  group_by(generation, question, answer) %>%
   summarize(n = sum(weight)) %>%
   mutate(p = n / sum(n)) %>%
   mutate(answer = fct_rev(factor(plyr::mapvalues(answer, 1:6, survey_opts), levels = survey_opts))) %>%
@@ -83,21 +86,41 @@ df_lo <- dft %>%
   )) %>%
   mutate(p = -p)
 
-g_likert_bds <- ggplot() + 
-  geom_col(data = df_hi, aes(question, p, fill = answer)) + 
-  geom_col(data = df_lo, aes(question, p, fill = answer)) + 
+nudge_y <- 0.35
+
+g_likert_bds <- ggplot() +
+  geom_col(data = df_hi, aes(question, p, fill = answer)) +
+  geom_text(
+    data = df_hi %>%
+      filter(answer != "Neither support nor oppose") %>%
+      group_by(question, generation) %>%
+      summarize(p = sum(p)),
+    aes(question, p, label = scales::percent(p, accuracy = 1)),
+    # color = "white"
+    nudge_y = nudge_y
+  ) +
+  geom_col(data = df_lo, aes(question, p, fill = answer)) +
+  geom_text(
+    data = df_lo %>%
+      filter(answer != "Neither support nor oppose") %>%
+      group_by(question, generation) %>%
+      summarize(p = sum(p)),
+    aes(question, p, label = scales::percent(-p, accuracy = 1)),
+    # color = "white"
+    nudge_y = -nudge_y
+  ) +
   geom_hline(yintercept = 0, color = "white") +
-  coord_flip() + 
-  facet_wrap(~race, ncol = 1) + 
-  scale_x_discrete(labels = function(x) str_wrap(x, 50)) + 
+  coord_flip() +
+  facet_wrap(~generation, ncol = 1) +
+  scale_x_discrete(labels = function(x) str_wrap(x, 50)) +
   scale_y_continuous(
     labels = function(x) scales::percent(x, accuracy = 1),
     limits = c(-1, 1)
   ) +
   scale_fill_manual(values = answer_colors_oppose) +
-  labs(title = str_wrap(titles[['BDS']], 12), x = "", y = "", fill = "") + 
-  theme_dfp() + 
-  theme(axis.text.y = element_blank(), axis.ticks.y = element_blank()) + 
+  labs(title = str_wrap(titles[['BDS']], 20), x = "", y = "", fill = "") +
+  theme_dfp() +
+  theme(axis.text.y = element_blank(), axis.ticks.y = element_blank()) +
   guides(fill = FALSE)
 g_likert_bds
 
@@ -121,21 +144,41 @@ df_lo <- dft %>%
   )) %>%
   mutate(p = -p)
 
-g_likert_redflag <- ggplot() + 
-  geom_col(data = df_hi, aes(question, p, fill = answer)) + 
-  geom_col(data = df_lo, aes(question, p, fill = answer)) + 
+nudge_y <- 0.2
+
+g_likert_redflag <- ggplot() +
+  geom_col(data = df_hi, aes(question, p, fill = answer)) +
+  geom_text(
+    data = df_hi %>%
+      filter(answer != "Neither support nor oppose") %>%
+      group_by(question, generation) %>%
+      summarize(p = sum(p)),
+    aes(question, p, label = scales::percent(p, accuracy = 1)),
+    # color = "white"
+    nudge_y = nudge_y
+  ) +
+  geom_col(data = df_lo, aes(question, p, fill = answer)) +
+  geom_text(
+    data = df_lo %>%
+      filter(answer != "Neither support nor oppose") %>%
+      group_by(question, generation) %>%
+      summarize(p = sum(p)),
+    aes(question, p, label = scales::percent(-p, accuracy = 1)),
+    # color = "white"
+    nudge_y = -nudge_y
+  ) +
   geom_hline(yintercept = 0, color = "white") +
-  facet_wrap(~race, ncol = 1) + 
+  facet_wrap(~generation, ncol = 1) +
   coord_flip() +
-  scale_x_discrete(labels = function(x) str_wrap(x, 50)) + 
+  scale_x_discrete(labels = function(x) str_wrap(x, 50)) +
   scale_y_continuous(
     labels = function(x) scales::percent(x, accuracy = 1),
     limits = c(-1, 1)
   ) +
   scale_fill_manual(values = answer_colors_support) +
-  labs(title = titles[['REDFLAG']], x = "", y = "", fill = "") + 
-  theme_dfp() + 
-  theme(axis.text.y = element_blank(), axis.ticks.y = element_blank()) + 
+  labs(title = titles[['REDFLAG']], x = "", y = "", fill = "") +
+  theme_dfp() +
+  theme(axis.text.y = element_blank(), axis.ticks.y = element_blank()) +
   guides(fill = FALSE)
 g_likert_redflag
 
@@ -160,28 +203,43 @@ df_lo <- dft %>%
   )) %>%
   mutate(p = -p)
 
-g_likert_fourday <- ggplot() + 
-  geom_col(data = df_hi, aes(question, p, fill = answer)) + 
-  geom_col(data = df_lo, aes(question, p, fill = answer)) + 
+nudge_y <- 0.3
+
+g_likert_fourday <- ggplot() +
+  geom_col(data = df_hi, aes(question, p, fill = answer)) +
+  geom_text(
+    data = df_hi %>%
+      filter(answer != "Neither support nor oppose") %>%
+      group_by(question, generation) %>%
+      summarize(p = sum(p)),
+    aes(question, p, label = scales::percent(p, accuracy = 1)),
+    # color = "white"
+    nudge_y = nudge_y
+  ) +
+  geom_col(data = df_lo, aes(question, p, fill = answer)) +
+  geom_text(
+    data = df_lo %>%
+      filter(answer != "Neither support nor oppose") %>%
+      group_by(question, generation) %>%
+      summarize(p = sum(p)),
+    aes(question, p, label = scales::percent(-p, accuracy = 1)),
+    # color = "white"
+    nudge_y = -nudge_y
+  ) +
   geom_hline(yintercept = 0, color = "white") +
-  facet_wrap(~race, ncol = 1) + 
-  coord_flip() + 
-  scale_x_discrete(labels = function(x) str_wrap(x, 50)) + 
+  facet_wrap(~generation, ncol = 1) +
+  coord_flip() +
+  scale_x_discrete(labels = function(x) str_wrap(x, 50)) +
   scale_y_continuous(
     labels = function(x) scales::percent(x, accuracy = 1),
     limits = c(-1, 1)
   ) +
   scale_fill_manual(values = answer_colors_support) +
-  labs(title = str_wrap(titles[['FOURDAY']], 12), x = "", y = "", fill = "") + 
+  labs(title = str_wrap(titles[['FOURDAY']], 20), x = "", y = "", fill = "") +
   theme_dfp() +
-  theme(axis.text.y = element_blank(), axis.ticks.y = element_blank()) + 
+  theme(axis.text.y = element_blank(), axis.ticks.y = element_blank()) +
   guides(fill = FALSE)
 g_likert_fourday
 
-cowplot::plot_grid(
-  g_likert_redflag, g_likert_fourday, g_likert_bds, 
-  nrow = 1, align = 'hv'
-)
-
-
+g_likert_redflag + g_likert_fourday + g_likert_bds
 
