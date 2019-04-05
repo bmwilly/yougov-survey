@@ -1,4 +1,13 @@
-library(patchwork)
+
+title_fourday <- "4-day work week"
+title_redflag <- "Red flag laws"
+title_bds <- "Laws forbidding boycotts of Israel"
+
+titles <- c(
+  "REDFLAG" = title_redflag,
+  "FOURDAY" = title_fourday,
+  "BDS" = title_bds
+)
 
 answer_colors_support <- c(
   colors['dark_blue'],
@@ -19,27 +28,6 @@ answer_colors_oppose <- c(
   colors['light_gray']
 )
 names(answer_colors_oppose) <- survey_opts
-
-title_fourday <- "4-day work week"
-title_redflag <- "Red flag laws"
-title_bds <- "Laws forbidding boycotts of Israel"
-
-titles <- c(
-  "REDFLAG" = title_redflag,
-  "FOURDAY" = title_fourday,
-  "BDS" = title_bds
-)
-
-races <- c(
-  "White",
-  "Black or African-American",
-  "Hispanic or Latino",
-  "Asian or Asian-American",
-  "Native American",
-  "Mixed Race",
-  "Other",
-  "Middle Eastern"
-)
 
 ## Race
 df <- dat %>%
@@ -86,7 +74,7 @@ df_lo <- dft %>%
   )) %>%
   mutate(p = -p)
 
-nudge_y <- 0.35
+nudge_y <- 0.27
 
 g_likert_bds <- ggplot() +
   geom_col(data = df_hi, aes(question, p, fill = answer)) +
@@ -144,7 +132,7 @@ df_lo <- dft %>%
   )) %>%
   mutate(p = -p)
 
-nudge_y <- 0.2
+nudge_y <- 0.12
 
 g_likert_redflag <- ggplot() +
   geom_col(data = df_hi, aes(question, p, fill = answer)) +
@@ -154,7 +142,6 @@ g_likert_redflag <- ggplot() +
       group_by(question, race) %>%
       summarize(p = sum(p)),
     aes(question, p, label = scales::percent(p, accuracy = 1)),
-    # color = "white"
     nudge_y = nudge_y
   ) +
   geom_col(data = df_lo, aes(question, p, fill = answer)) +
@@ -164,7 +151,6 @@ g_likert_redflag <- ggplot() +
       group_by(question, race) %>%
       summarize(p = sum(p)),
     aes(question, p, label = scales::percent(-p, accuracy = 1)),
-    # color = "white"
     nudge_y = -nudge_y
   ) +
   geom_hline(yintercept = 0, color = "white") +
@@ -203,7 +189,7 @@ df_lo <- dft %>%
   )) %>%
   mutate(p = -p)
 
-nudge_y <- 0.3
+nudge_y <- 0.2
 
 g_likert_fourday <- ggplot() +
   geom_col(data = df_hi, aes(question, p, fill = answer)) +
@@ -241,5 +227,24 @@ g_likert_fourday <- ggplot() +
   guides(fill = FALSE)
 g_likert_fourday
 
-g_likert_redflag + g_likert_fourday + g_likert_bds
+# g_likert_redflag + g_likert_fourday + g_likert_bds
+
+
+g_likert_redflag + 
+  labs(
+    title = "Breakdown by race",
+    subtitle = "Red flag laws enjoy especially high support among Black Americans"
+  )
+
+g_likert_fourday + 
+  labs(
+    title = "Breakdown by race",
+    subtitle = ""
+  )
+
+g_likert_bds + 
+  labs(
+    title = "Breakdown by race",
+    subtitle = ""
+  )
 
