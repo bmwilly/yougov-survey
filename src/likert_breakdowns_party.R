@@ -30,18 +30,20 @@ answer_colors_oppose <- c(
 )
 names(answer_colors_oppose) <- survey_opts
 
+dat %>%
+  mutate(party = plyr::mapvalues(pid3, 1:5, parties)) %>%
+  group_by(party) %>%
+  summarize(n = sum(weight))
+
 df <- dat %>%
-  mutate(
-    race = fct_infreq(plyr::mapvalues(race, 1:8, races)),
-    age = 2019 - birthyr,
-    generation = cut(age, breaks = c(0, 37, 53, 72, Inf), labels = c("Millennial", "Gen X", "Boomers", "Silent"))
-  ) %>%
-  mutate(race = fct_other(race, keep = c("White", "Black or African-American", "Hispanic or Latino"))) %>%
-  select(race, generation, FOURDAY, REDFLAG, BDS, weight) %>%
+  mutate(party = plyr::mapvalues(pid3, 1:5, parties)) %>%
+#   mutate(party = fct_other(party, keep = c("Democrat", "Republican", "Independent"))) %>%
+  filter(party %in% c("Democrat", "Republican", "Independent")) %>%
+  mutate(party = factor(party, levels = c("Democrat", "Republican", "Independent"))) %>%
   gather(question, answer, FOURDAY, REDFLAG, BDS) %>%
   drop_na(answer) %>%
   filter(answer != 6) %>%
-  group_by(generation, question, answer) %>%
+  group_by(party, question, answer) %>%
   summarize(n = sum(weight)) %>%
   mutate(p = n / sum(n)) %>%
   mutate(answer = fct_rev(factor(plyr::mapvalues(answer, 1:6, survey_opts), levels = survey_opts))) %>%
@@ -81,23 +83,25 @@ g_likert_bds <- ggplot() +
   geom_text(
     data = df_hi %>%
       filter(answer != "Neither support nor oppose") %>%
-      group_by(question, generation) %>%
+      group_by(question, party) %>%
       summarize(p = sum(p)),
     aes(question, p, label = scales::percent(p, accuracy = 1)),
+    # color = "white"
     nudge_y = nudge_y
   ) +
   geom_col(data = df_lo, aes(question, p, fill = answer)) +
   geom_text(
     data = df_lo %>%
       filter(answer != "Neither support nor oppose") %>%
-      group_by(question, generation) %>%
+      group_by(question, party) %>%
       summarize(p = sum(p)),
     aes(question, p, label = scales::percent(-p, accuracy = 1)),
+    # color = "white"
     nudge_y = -nudge_y
   ) +
   geom_hline(yintercept = 0, color = "white") +
   coord_flip() +
-  facet_wrap(~generation, ncol = 1) +
+  facet_wrap(~party, ncol = 1) +
   scale_x_discrete(labels = function(x) str_wrap(x, 50)) +
   scale_y_continuous(
     labels = function(x) scales::percent(x, accuracy = 1),
@@ -130,14 +134,14 @@ df_lo <- dft %>%
   )) %>%
   mutate(p = -p)
 
-nudge_y <- 0.11
+nudge_y <- 0.12
 
 g_likert_redflag <- ggplot() +
   geom_col(data = df_hi, aes(question, p, fill = answer)) +
   geom_text(
     data = df_hi %>%
       filter(answer != "Neither support nor oppose") %>%
-      group_by(question, generation) %>%
+      group_by(question, party) %>%
       summarize(p = sum(p)),
     aes(question, p, label = scales::percent(p, accuracy = 1)),
     nudge_y = nudge_y
@@ -146,13 +150,13 @@ g_likert_redflag <- ggplot() +
   geom_text(
     data = df_lo %>%
       filter(answer != "Neither support nor oppose") %>%
-      group_by(question, generation) %>%
+      group_by(question, party) %>%
       summarize(p = sum(p)),
     aes(question, p, label = scales::percent(-p, accuracy = 1)),
     nudge_y = -nudge_y
   ) +
   geom_hline(yintercept = 0, color = "white") +
-  facet_wrap(~generation, ncol = 1) +
+  facet_wrap(~party, ncol = 1) +
   coord_flip() +
   scale_x_discrete(labels = function(x) str_wrap(x, 50)) +
   scale_y_continuous(
@@ -187,29 +191,31 @@ df_lo <- dft %>%
   )) %>%
   mutate(p = -p)
 
-nudge_y <- 0.2
+nudge_y <- 0.22
 
 g_likert_fourday <- ggplot() +
   geom_col(data = df_hi, aes(question, p, fill = answer)) +
   geom_text(
     data = df_hi %>%
       filter(answer != "Neither support nor oppose") %>%
-      group_by(question, generation) %>%
+      group_by(question, party) %>%
       summarize(p = sum(p)),
     aes(question, p, label = scales::percent(p, accuracy = 1)),
+    # color = "white"
     nudge_y = nudge_y
   ) +
   geom_col(data = df_lo, aes(question, p, fill = answer)) +
   geom_text(
     data = df_lo %>%
       filter(answer != "Neither support nor oppose") %>%
-      group_by(question, generation) %>%
+      group_by(question, party) %>%
       summarize(p = sum(p)),
     aes(question, p, label = scales::percent(-p, accuracy = 1)),
+    # color = "white"
     nudge_y = -nudge_y
   ) +
   geom_hline(yintercept = 0, color = "white") +
-  facet_wrap(~generation, ncol = 1) +
+  facet_wrap(~party, ncol = 1) +
   coord_flip() +
   scale_x_discrete(labels = function(x) str_wrap(x, 50)) +
   scale_y_continuous(
@@ -228,18 +234,19 @@ g_likert_fourday
 
 g_likert_redflag +
   labs(
-    title = "Breakdown by generation",
-    subtitle = "There is consistently high support across generation"
+    title = "Breakdown by party",
+    subtitle = "Even a majority of Republicans support red flag laws"
   )
 
 g_likert_fourday +
   labs(
-    title = "Breakdown by generation",
-    subtitle = "4-day work week enjoys high support among Millennials and Gen Xers"
+    title = "Breakdown by party",
+    subtitle = ""
   )
 
 g_likert_bds +
   labs(
-    title = "Breakdown by generation",
-    subtitle = "A plurality of all generations oppose laws forbidding boycotts of Israel"
+    title = "Breakdown by party",
+    subtitle = ""
   )
+

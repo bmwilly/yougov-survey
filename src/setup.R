@@ -90,3 +90,11 @@ races <- c(
   "Other",
   "Middle Eastern"
 )
+
+parties <- c(
+  "Democrat",
+  "Republican",
+  "Independent",
+  "Other",
+  "Not sure"
+)
