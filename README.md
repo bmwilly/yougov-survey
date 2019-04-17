@@ -1,3 +1,5 @@
 # Data for Progress YouGov survey
 
-- [Post draft](https://docs.google.com/document/d/1BNwJMNCVL10TCFi77VxND-FKudZpGMRRPDVe4_2SzxE/edit)
+Posts:
+
+- [Red Flag Flag Laws Are Incredibly Popular](https://www.dataforprogress.org/blog/2019/4/10/red-flag)
